@@ -1,0 +1,29 @@
+{
+  "hosting": {
+    "public": "build",  // ** Configure this to the build output directory of your React admin app **
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "functions": {
+    "source": "../new-shelf-scanner-functions", // ** Point this to your functions directory **
+    "runtime": "nodejs18" // ** Choose a supported Node.js runtime **
+  }
+  // Add other configurations like Firestore rules, storage rules, etc. if they are not in separate files
+  // For example, if you prefer to keep rules in firebase.json:
+  // "firestore": {
+  //   "rules": "firestore.rules",
+  //   "indexes": "firestore.indexes.json"
+  // },
+  // "storage": {
+  //   "rules": "storage.rules"
+  // }
+}

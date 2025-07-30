@@ -1,0 +1,39 @@
+{
+  "indexes": [
+    // Composite index for fetching jobs by contractorId and ordering by a relevant field (e.g., creation date)
+    {
+      "collectionGroup": "jobs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "contractorId",
+          "order": "asc"
+        },
+        {
+          "fieldPath": "createdAt", // Assuming a 'createdAt' field for ordering
+          "order": "desc"
+        }
+      ]
+    },
+    // Composite index for fetching reviews by status and contractorId, and ordering by timestamp
+    {
+      "collectionGroup": "reviews",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "asc"
+        },
+        {
+          "fieldPath": "contractorId", // Assuming review document contains contractorId
+          "order": "asc"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "desc"
+        }
+      ]
+    }
+    // Add other composite indexes as needed for your queries
+  ]
+}

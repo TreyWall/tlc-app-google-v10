@@ -1,0 +1,49 @@
+// Firestore Security Rules
+// Learn more about security rules: https://firebase.google.com/docs/firestore/security/get-started
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user is an admin
+    // This assumes you have a 'users' collection with a 'role' field
+    function isAdmin() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper function to check if the user is a contractor
+    function isContractor() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'contractor';
+    }
+
+    // Users collection: Admins can read/write all user data, users can read their own data
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == userId);
+      allow create: if isAuthenticated(); // Allow authenticated users to create their own user document
+      allow update, delete: if isAdmin() || request.auth.uid == userId;
+    }
+
+    // Jobs collection: Admins can read/write all job data
+    // Contractors can read jobs assigned to them (assuming a 'contractorId' field)
+    match /jobs/{jobId} {
+      allow read: if isAdmin() || (isContractor() && resource.data.contractorId == request.auth.uid);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Reviews collection: Admins can read/write all review data
+    // Contractors can read and update their own reviews (assuming a 'jobId' field and review document contains contractorId or can be linked via job)
+    match /reviews/{reviewId} {
+      allow read: if isAdmin() || (isContractor() && resource.data.jobId in get(/databases/$(database)/documents/jobs).data.keys() && get(/databases/$(database)/documents/jobs/$(resource.data.jobId)).data.contractorId == request.auth.uid);
+      allow create: if isContractor(); // Contractors can create reviews after completing a job
+      allow update: if isContractor() && resource.data.jobId in get(/databases/$(database)/documents/jobs).data.keys() && get(/databases/$(database)/documents/jobs/$(resource.data.jobId)).data.contractorId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    // Add rules for other collections if you have any
+  }
+}
