@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Rules for shelf images
+    match /shelf_images/{jobId}/{imageId} {
+      // Allow authenticated contractors to create (upload) images for jobs assigned to them
+      // This requires checking the 'jobs' collection in Firestore
+      allow create: if request.auth != null && exists(/databases/(default)/documents/users/$(request.auth.uid)) && get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'contractor' && exists(/databases/(default)/documents/jobs/$(jobId)) && get(/databases/(default)/documents/jobs/$(jobId)).data.contractorId == request.auth.uid;
+
+      // Allow authenticated admins to read images
+      // Also allow the authenticated user (contractor) to read their own uploaded image
+      allow read: if request.auth != null && (exists(/databases/(default)/documents/users/$(request.auth.uid)) && get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin') || (request.auth.uid != null && exists(/databases/(default)/documents/users/$(request.auth.uid)) && get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'contractor' && exists(/databases/(default)/documents/jobs/$(jobId)) && get(/databases/(default)/documents/jobs/$(jobId)).data.contractorId == request.auth.uid && resource.metadata.firebaseStorageDownloadTokens.split(',').includes(request.params.imageId.split('?token=')[1]));
+
+      // Add rule to allow Cloud Functions service account to read (if needed explicitly)
+      // allow read: if request.auth == null; // This might allow unauthenticated reads, so be careful. 
+      // A more secure approach might involve passing a signed URL from the client or using Admin SDK in CF.
+
+      // Prevent any other operations (update, delete) from client apps on these images
+      allow update, delete: if false;
+    }
+
+    // Optionally, add rules for other paths if you store other files
+  }
+}
