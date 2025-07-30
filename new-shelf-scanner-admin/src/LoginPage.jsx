@@ -1,7 +1,7 @@
 // new-shelf-scanner-admin/src/LoginPage.jsx
 import React, { useState } from 'react';
 import { auth } from '../firebase'; // Assuming firebase initialization is in ../firebase.js or similar
-import { TextField, Button, Typography, Container, Box, useTheme } from '@mui/material';
+import { TextField, Button, Typography, Container, Box, useTheme, Link } from '@mui/material';
 import { useSnackbar } from 'notistack'; // Import useSnackbar hook
 
 const LoginPage = () => {
@@ -11,6 +11,9 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({}); // State to manage validation errors
+  const [showResetForm, setShowResetForm] = useState(false); // State to toggle password reset form
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -29,6 +32,8 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
+      // Optionally, show a generic error snackbar for validation failure
+      // enqueueSnackbar('Please fix the errors in the form.', { variant: 'warning' });
       return;
     }
 
@@ -42,11 +47,63 @@ const LoginPage = () => {
       // Example navigation (replace with your actual routing logic)
       // history.push('/job-queue');
     } catch (err) {
-      // Display error notification
-      enqueueSnackbar(`Login Failed: ${err.message}`, { variant: 'error' });
       console.error('Admin login failed:', err);
+      let errorMessage = 'An unknown error occurred.';
+      // Provide more specific error messages based on Firebase Auth error codes
+      switch (err.code) {
+        case 'auth/user-not-found':
+          errorMessage = 'No user found with this email.';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Incorrect password.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address format.';
+          break;
+         case 'auth/too-many-requests':
+          errorMessage = 'Too many login attempts. Please try again later.';
+          break;
+        // Add more cases for other common auth errors if needed
+        default:
+          errorMessage = `Login Failed: ${err.message}`; // Fallback to the original error message
+      }
+      // Display error snackbar with the specific message
+      enqueueSnackbar(errorMessage, { variant: 'error' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendPasswordReset = async () => {
+     if (!resetEmail) {
+         enqueueSnackbar('Please enter your email address.', { variant: 'warning' });
+         return;
+     }
+
+    setResetLoading(true);
+    try {
+      await auth.sendPasswordResetEmail(resetEmail);
+      enqueueSnackbar('Password reset email sent. Check your inbox.', { variant: 'success' });
+      setShowResetForm(false); // Hide the form on success
+      setResetEmail(''); // Clear the email field
+    } catch (err) {
+       console.error('Password reset error:', err);
+      let errorMessage = 'Failed to send password reset email.';
+      // Provide more specific error messages based on Firebase Auth error codes
+      switch (err.code) {
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address format.';
+          break;
+        case 'auth/user-not-found':
+          errorMessage = 'No user found with this email address.';
+          break;
+        // Add more cases for other common auth errors if needed
+        default:
+          errorMessage = `Failed to send reset email: ${err.message}`; // Fallback
+      }
+      enqueueSnackbar(errorMessage, { variant: 'error' });
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -54,76 +111,109 @@ const LoginPage = () => {
     <Container component="main" maxWidth="xs">
       <Box
         sx={{
-          marginTop: theme.spacing(8), // Use theme spacing
+          marginTop: theme.spacing(8),
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          padding: theme.spacing(3), // Use theme spacing
-          border: '1px solid #ccc', // Keep border for now, can be themed
-          borderRadius: theme.shape.borderRadius, // Use theme border radius
-          backgroundColor: theme.palette.background.paper, // Use theme surface color
+          padding: theme.spacing(3),
+          border: '1px solid #ccc',
+          borderRadius: theme.shape.borderRadius,
+          backgroundColor: theme.palette.background.paper,
         }}
       >
         <Typography component="h1" variant="h5">
           Admin Login
         </Typography>
-        <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: theme.spacing(1) }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              // Clear email error when user starts typing
-              if (errors.email) {
-                setErrors({ ...errors, email: null });
-              }
-            }}
-            error={!!errors.email} // Set error prop based on errors state
-            helperText={errors.email} // Display error message
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-               // Clear password error when user starts typing
-              if (errors.password) {
-                 setErrors({ ...errors, password: null });
-              }
-            }}
-            error={!!errors.password} // Set error prop based on errors state
-            helperText={errors.password} // Display error message
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{
-              mt: theme.spacing(3),
-              mb: theme.spacing(2),
-              '&:active': { // Style for active state
-                backgroundColor: theme.palette.primary.dark, // Darker shade on press
-              },
-            }}
-            disabled={loading}
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </Button>
-        </Box>
+
+        {!showResetForm ? (
+          // Login Form
+          <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: theme.spacing(1) }}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              autoFocus
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) {
+                  setErrors({ ...errors, email: null });
+                }
+              }}
+              error={!!errors.email}
+              helperText={errors.email}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                 if (errors.password) {
+                    setErrors({ ...errors, password: null });
+                 }
+              }}
+              error={!!errors.password}
+              helperText={errors.password}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{
+                mt: theme.spacing(3),
+                mb: theme.spacing(2),
+                '&:active': {
+                  backgroundColor: theme.palette.primary.dark,
+                },
+              }}
+              disabled={loading}
+            >
+              {loading ? 'Logging in...' : 'Login'}
+            </Button>
+            <Link component="button" variant="body2" onClick={() => setShowResetForm(true)} sx={{ alignSelf: 'center' }}>
+              Forgot Password?
+            </Link>
+          </Box>
+        ) : (
+          // Password Reset Form
+          <Box sx={{ mt: theme.spacing(1), width: '100%' }}>
+             <Typography variant="h6" gutterBottom>Reset Your Password</Typography>
+             <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="reset-email"
+                label="Email Address"
+                name="reset-email"
+                autoComplete="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+             />
+              <Button
+                fullWidth
+                variant="contained"
+                sx={{ mt: theme.spacing(2), mb: theme.spacing(1) }}
+                onClick={handleSendPasswordReset}
+                disabled={resetLoading}
+              >
+                {resetLoading ? 'Sending...' : 'Send Reset Email'}
+              </Button>
+               <Link component="button" variant="body2" onClick={() => setShowResetForm(false)} sx={{ alignSelf: 'center' }}>
+                 Back to Login
+               </Link>
+          </Box>
+        )}
       </Box>
     </Container>
   );

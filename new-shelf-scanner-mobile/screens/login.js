@@ -1,6 +1,6 @@
 // new-shelf-scanner-mobile/screens/login.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Dimensions, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 import { auth } from '../firebase';
 import { theme } from '../../theme'; // Import the theme object (adjust path as needed)
 import { useToast } from 'react-native-toast-notifications'; // Import useToast hook
@@ -68,6 +68,14 @@ const NewShelfScannerLoginScreen = ({ navigation }) => {
     }
   };
 
+  const handleForgotPassword = () => {
+    navigation.navigate('PasswordReset'); // Navigate to the Password Reset screen
+  };
+
+  const handleSignup = () => {
+    navigation.navigate('Signup'); // Navigate to the Signup screen
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -109,7 +117,14 @@ const NewShelfScannerLoginScreen = ({ navigation }) => {
          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>} {/* Display error message */}
 
         <Button title={loading ? 'Logging in...' : 'Login'} onPress={handleLogin} disabled={loading} color={theme.colors.primary} />
-        {/* Add a button or link for signup if needed */}
+
+        <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPasswordLink}>
+           <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={handleSignup} style={styles.signupLink}> {/* Added Signup Link */}
+           <Text style={styles.signupText}>Don't have an account? Sign Up</Text>
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
@@ -152,6 +167,24 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacingReactNative.small,
     paddingHorizontal: theme.spacingReactNative.small,
   },
+  forgotPasswordLink: {
+     marginTop: theme.spacingReactNative.medium,
+     alignSelf: 'center',
+  },
+   forgotPasswordText: {
+     fontSize: theme.typography.body2.fontSize,
+     color: theme.colors.primary, // Use primary color for link
+     textDecorationLine: 'underline',
+   },
+   signupLink: { // Added style for Signup Link
+      marginTop: theme.spacingReactNative.small,
+      alignSelf: 'center',
+   },
+   signupText: { // Added style for Signup Text
+      fontSize: theme.typography.body2.fontSize,
+      color: theme.colors.primary, // Use primary color for link
+      textDecorationLine: 'underline',
+   },
 });
 
 export default NewShelfScannerLoginScreen;

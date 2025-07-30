@@ -41,8 +41,24 @@ const JobQueuePage = () => {
         setLoadingJobs(false); // Set loading to false once initial data is received
       }, err => {
         console.error('Error fetching real-time jobs:', err);
-        setError('Failed to fetch real-time jobs.');
-        enqueueSnackbar(`Failed to fetch jobs: ${err.message}`, { variant: 'error' });
+        let errorMessage = 'Failed to fetch jobs.';
+        // Provide more specific error messages based on Firestore error codes
+        switch (err.code) {
+          case 'permission-denied':
+            errorMessage = 'You do not have permission to view jobs.';
+            break;
+          case 'unavailable':
+            errorMessage = 'Firestore is currently unavailable. Please try again later.';
+            break;
+          case 'internal':
+            errorMessage = 'An internal error occurred while fetching jobs. Please try again.';
+            break;
+          // Add more cases for other common Firestore errors if needed
+          default:
+            errorMessage = `Failed to fetch jobs: ${err.message}`; // Fallback
+        }
+        setError(errorMessage);
+        enqueueSnackbar(errorMessage, { variant: 'error' });
         setLoadingJobs(false);
       });
 
@@ -56,8 +72,24 @@ const JobQueuePage = () => {
         setContractors(contractorsData);
       } catch (err) {
         console.error('Error fetching contractors:', err);
-        setError('Failed to fetch contractors.');
-        enqueueSnackbar(`Error fetching contractors: ${err.message}`, { variant: 'error' });
+         let errorMessage = 'Failed to fetch contractors.';
+        // Provide more specific error messages based on Firestore error codes
+        switch (err.code) {
+          case 'permission-denied':
+            errorMessage = 'You do not have permission to view contractors.';
+            break;
+          case 'unavailable':
+            errorMessage = 'Firestore is currently unavailable. Please try again later.';
+            break;
+          case 'internal':
+            errorMessage = 'An internal error occurred while fetching contractors. Please try again.';
+            break;
+          // Add more cases for other common Firestore errors if needed
+          default:
+            errorMessage = `Failed to fetch contractors: ${err.message}`; // Fallback
+        }
+        setError(errorMessage);
+        enqueueSnackbar(errorMessage, { variant: 'error' });
       } finally {
         setLoadingContractors(false);
       }
@@ -84,7 +116,26 @@ const JobQueuePage = () => {
       console.log(`Job ${jobId} assigned to contractor ${contractorId}`);
     } catch (err) {
       console.error('Error assigning contractor:', err);
-      enqueueSnackbar(`Failed to assign contractor: ${err.message}`, { variant: 'error' });
+      let errorMessage = 'Failed to assign contractor.';
+       // Provide more specific error messages based on Firestore error codes
+      switch (err.code) {
+          case 'permission-denied':
+            errorMessage = 'You do not have permission to assign jobs.';
+            break;
+          case 'unavailable':
+            errorMessage = 'Firestore is currently unavailable. Please try again later.';
+            break;
+          case 'internal':
+            errorMessage = 'An internal error occurred while assigning the job. Please try again.';
+            break;
+           case 'not-found':
+            errorMessage = 'The job document was not found.';
+            break;
+          // Add more cases for other common Firestore errors if needed
+          default:
+            errorMessage = `Failed to assign contractor: ${err.message}`; // Fallback
+        }
+      enqueueSnackbar(errorMessage, { variant: 'error' });
       setError('Failed to assign contractor.'); // Keep internal error state if needed
     } finally {
       setAssigningJobId(null); // Reset the assigning job state

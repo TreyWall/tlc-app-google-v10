@@ -1,0 +1,42 @@
+type User @table {
+  displayName: String!
+  createdAt: Timestamp!
+  email: String
+  photoUrl: String
+}
+
+type Location @table {
+  name: String!
+  description: String
+  createdAt: Timestamp!
+  user: User!
+}
+
+type Category @table {
+  name: String!
+  description: String
+  createdAt: Timestamp!
+  user: User!
+}
+
+type Item @table {
+  name: String!
+  description: String
+  barcode: String
+  imageUrl: String
+  createdAt: Timestamp!
+  user: User!
+  category: Category
+}
+
+type InventoryRecord @table {
+  quantity: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  purchaseDate: Date
+  purchasePrice: Float
+  notes: String
+  user: User!
+  item: Item!
+  location: Location!
+}

@@ -49,8 +49,24 @@ const ReportsDashboard = () => {
         setLoading(false); // Set loading to false once initial data is received
       }, err => {
         console.error('Error fetching real-time completed reviews:', err);
-        setError('Failed to fetch real-time completed reviews.');
-        enqueueSnackbar(`Failed to fetch reports: ${err.message}`, { variant: 'error' });
+        let errorMessage = 'Failed to fetch reports.';
+        // Provide more specific error messages based on Firestore error codes
+        switch (err.code) {
+          case 'permission-denied':
+            errorMessage = 'You do not have permission to view reports.';
+            break;
+          case 'unavailable':
+            errorMessage = 'Firestore is currently unavailable. Please try again later.';
+            break;
+          case 'internal':
+            errorMessage = 'An internal error occurred while fetching reports. Please try again.';
+            break;
+          // Add more cases for other common Firestore errors if needed
+          default:
+            errorMessage = `Failed to fetch reports: ${err.message}`; // Fallback
+        }
+        setError(errorMessage);
+        enqueueSnackbar(errorMessage, { variant: 'error' });
         setLoading(false);
       });
 

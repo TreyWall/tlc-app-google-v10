@@ -48,8 +48,27 @@ const JobReviewPage = () => {
         setLoading(false); // Set loading to false once initial job data is received
       }, err => {
         console.error('Error fetching real-time job:', err);
-        setError('Failed to fetch real-time job data.');
-        enqueueSnackbar(`Failed to fetch job data: ${err.message}`, { variant: 'error' });
+        let errorMessage = 'Failed to fetch job data.';
+         // Provide more specific error messages based on Firestore error codes
+        switch (err.code) {
+          case 'permission-denied':
+            errorMessage = 'You do not have permission to view this job.';
+            break;
+          case 'unavailable':
+            errorMessage = 'Firestore is currently unavailable. Please try again later.';
+            break;
+          case 'internal':
+            errorMessage = 'An internal error occurred while fetching job data. Please try again.';
+            break;
+           case 'not-found':
+            errorMessage = 'The job document was not found.';
+            break;
+          // Add more cases for other common Firestore errors if needed
+          default:
+            errorMessage = `Failed to fetch job data: ${err.message}`; // Fallback
+        }
+        setError(errorMessage);
+        enqueueSnackbar(errorMessage, { variant: 'error' });
         setLoading(false);
       });
 
@@ -63,8 +82,23 @@ const JobReviewPage = () => {
          // Note: We don't set loading here, as it's handled by the job listener
       }, err => {
         console.error('Error fetching real-time reviews:', err);
-        // You might want to handle review fetching errors separately if they are not critical
-        enqueueSnackbar(`Failed to fetch reviews: ${err.message}`, { variant: 'error' });
+        let errorMessage = 'Failed to fetch reviews.';
+         // Provide more specific error messages based on Firestore error codes
+        switch (err.code) {
+          case 'permission-denied':
+            errorMessage = 'You do not have permission to view reviews for this job.';
+            break;
+          case 'unavailable':
+            errorMessage = 'Firestore is currently unavailable. Please try again later.';
+            break;
+          case 'internal':
+            errorMessage = 'An internal error occurred while fetching reviews. Please try again.';
+            break;
+          // Add more cases for other common Firestore errors if needed
+          default:
+            errorMessage = `Failed to fetch reviews: ${err.message}`; // Fallback
+        }
+        enqueueSnackbar(errorMessage, { variant: 'error' });
       });
 
     // Unsubscribe from listeners when component unmounts
@@ -138,7 +172,26 @@ const JobReviewPage = () => {
       // The real-time listener for reviews will update the local state
     } catch (err) {
       console.error('Error saving admin review:', err);
-      enqueueSnackbar(`Failed to save admin review: ${err.message}`, { variant: 'error' });
+      let errorMessage = 'Failed to save admin review.';
+       // Provide more specific error messages based on Firestore error codes
+      switch (err.code) {
+          case 'permission-denied':
+            errorMessage = 'You do not have permission to save reviews.';
+            break;
+          case 'unavailable':
+            errorMessage = 'Firestore is currently unavailable. Please try again later.';
+            break;
+          case 'internal':
+            errorMessage = 'An internal error occurred while saving the review. Please try again.';
+            break;
+           case 'not-found':
+            errorMessage = 'The review document was not found.';
+            break;
+          // Add more cases for other common Firestore errors if needed
+          default:
+            errorMessage = `Failed to save admin review: ${err.message}`; // Fallback
+        }
+      enqueueSnackbar(errorMessage, { variant: 'error' });
     } finally {
       setSavingReviewId(null); // Reset the saving review state
     }

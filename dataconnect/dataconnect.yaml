@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "tlc-app-google-v1.0"
+location: "us-central1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "TLCFDC"
+      cloudSql:
+        instanceId: "tlc-app-google-v1.0-FDC"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]
