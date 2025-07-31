@@ -29,8 +29,7 @@ exports.parseShelfImage = functions.https.onCallable(async (data, context) => {
     // This is still a basic example. A robust solution would need more sophisticated logic
     // potentially combining OCR with object detection and more complex text processing.
     const parsedData = { products: [] };
-    const lines = fullText.split('
-').filter(line => line.trim() !== '');
+    const lines = fullText.split(`\n`).filter(line => line.trim() !== '');
 
     lines.forEach(line => {
       // Attempt to find a quantity number at the end of the line
