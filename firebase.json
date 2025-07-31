@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "shelf-scanner-admin/dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
